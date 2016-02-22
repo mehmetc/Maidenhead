@@ -1,5 +1,5 @@
 "use strict";
-export default class Maidenhead {
+module.exports = class Maidenhead {
     constructor(lat, lon, precision = 5){
         this.lat = lat;
         this.lon = lon;
@@ -169,4 +169,3 @@ export default class Maidenhead {
         return String.fromCharCode(97 + number);
     }
 }
-

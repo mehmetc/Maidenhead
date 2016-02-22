@@ -5,7 +5,7 @@ var concat = require("gulp-concat");
 var uglify = require("gulp-uglify");
 
 gulp.task("default", function () {
-    return gulp.src("src/**/*.js")
+    return gulp.src("src/**/*.es6")
         .pipe(sourcemaps.init())
         .pipe(babel())
         .pipe(concat("maidenhead.js"))
