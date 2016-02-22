@@ -1,5 +1,5 @@
 "use strict";
-module.exports = class Maidenhead {
+export default class Maidenhead {
     constructor(lat, lon, precision = 5){
         this.lat = lat;
         this.lon = lon;
