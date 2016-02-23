@@ -12,15 +12,20 @@ Based on [Michael Graff's maidenhead gem](https://rubygems.org/gems/maidenhead)
     var longitude = 4.701169;  //mandatory
     var precision = 6;         //optional defaults to 5
  
-    var townhall     = new Maidenhead(latitude, longitude, precision);
+    var townHall     = new Maidenhead(latitude, longitude, precision);
     var trainStation = new Maidenhead(50.881264, 4.715634, 6);
+    var library      = new Maidenhead(); 
+    
+    library.locator  = 'JO20iu16ti';
 
-    var maidenheadLocator = townhall.locator;
+    var maidenheadLocator = townHall.locator;
     console.log('has valid locator: ' + Maidenhead.valid(maidenheadLocator));
      
-    console.log("latitude: %s, longitude: %s, Maidenhead: %s", townhall.lat, townhall.lon, maidenheadLocator);
+    console.log("latitude: %s, longitude: %s, Maidenhead: %s", townHall.lat, townHall.lon, maidenheadLocator);
     console.log("[lat, lon] = ", Maidenhead.toLatLon(maidenheadLocator));
     
-    console.log("distance to train station in M: %s", townhall.distanceTo(trainStation, 'm'));
+    console.log("distance to train station in M from town hall: %s", townHall.distanceTo(trainStation, 'm'));
+    console.log("bearing to library station from town hall: %s degrees", townHall.bearingTo(library));
+    console.log("compass bearing to library station from town hall: %s ", townHall.bearingTo(library, true));
     
 ```    
