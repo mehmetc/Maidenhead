@@ -49,6 +49,29 @@ module.exports = class Maidenhead {
         return [maidenhead.lat, maidenhead.lon];
     }
 
+    distanceTo(endLatLon, unit = 'km'){
+        var r = 6371;
+
+        switch(unit) {
+           case 'm':
+               r *= 1000;
+        }
+
+        var hn = this._deg_to_rad(this.lat);
+        var he = this._deg_to_rad(this.lon);
+        var n  = this._deg_to_rad(endLatLon.lat);
+        var e  = this._deg_to_rad(endLatLon.lon);
+
+        var co = Math.cos(he-e) * Math.cos(hn) * Math.cos(n) + Math.sin(hn) * Math.sin(n);
+        var ca = Math.atan(Math.abs(Math.sqrt(1-co*co) / co));
+
+        if (co <0) {
+            ca = Math.PI - ca;
+        }
+
+        return r * ca;
+    }
+
     get lat(){
         return parseFloat(this._lat.toPrecision(6));
     }
@@ -63,6 +86,14 @@ module.exports = class Maidenhead {
 
     set lon(pos){
         this._lon = this._range_check("lon", 180.0, pos)
+    }
+
+    get precision(){
+        return this._precision;
+    }
+
+    set precision(p) {
+        this._precision = p;
     }
 
     set locator(mlocation){
@@ -96,6 +127,9 @@ module.exports = class Maidenhead {
         return this._locator;
     }
 
+    _deg_to_rad(deg) {
+        return deg / 180 * Math.PI;
+    }
 
     _pad_locator(){
         var length = this._locator.length / 2 ;
