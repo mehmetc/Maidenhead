@@ -6,8 +6,12 @@
         "outDir": "./lib",
         "strict": false,
         "noImplicitAny": true,
+        "sourceMap": true,
         "lib": [
             "ES2015"
+        ],
+        "types": [
+            "jasmine"
         ]
     },
     "include": ["src"],
