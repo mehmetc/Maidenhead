@@ -8,35 +8,34 @@ export default class Maidenhead {
     private __lon: number | undefined;
     private __precision: number | undefined;
 
-    constructor(lat: number, lon: number, precision = 5) {
+    constructor(lat?: number, lon?: number, precision: number = 5) {
         this.lat = lat;
         this.lon = lon;
         this.precision = precision;
     }
 
-    static valid(mlocation: string) {
-        if (typeof mlocation !== 'string') {
+    static valid(locator: string) {
+        if (typeof locator !== 'string') {
             return false;
         }
 
-        if (mlocation.length < 2) {
+        if (locator.length < 2) {
             return false;
         }
 
-        if ((mlocation.length % 2) !== 0) {
+        if ((locator.length % 2) !== 0) {
             return false;
         }
 
-        var length = mlocation.length / 2;
+        var length = locator.length / 2;
 
         for (var counter = 0; counter < length; counter++) {
-            var grid = mlocation.substr(counter * 2, 2);
+            var grid = locator.substr(counter * 2, 2);
 
             if (counter == 0) {
                 if (grid.match(/[a-rA-R]{2}/) == null) {
                     return false;
                 }
-
             } else if ((counter % 2) == 0) {
                 if (grid.match(/[a-xA-X]{2}/) == null) {
                     return false;
@@ -50,14 +49,14 @@ export default class Maidenhead {
         }
     }
 
-    static toLatLon(mlocation: string) {
-        var maidenhead = new Maidenhead(0, 0);
-        maidenhead.locator = mlocation;
+    static toLatLon(locator: string): [number, number] {
+        var maidenhead = new Maidenhead();
+        maidenhead.locator = locator;
 
         return [maidenhead.lat, maidenhead.lon];
     }
 
-    distanceTo(endLatLon: Maidenhead, unit = 'km') {
+    distanceTo(other: Maidenhead, unit: 'km' | 'm' = 'km') {
         var r = 6371;
 
         switch (unit) {
@@ -67,8 +66,8 @@ export default class Maidenhead {
 
         var hn = this._deg_to_rad(this.lat);
         var he = this._deg_to_rad(this.lon);
-        var n = this._deg_to_rad(endLatLon.lat);
-        var e = this._deg_to_rad(endLatLon.lon);
+        var n = this._deg_to_rad(other.lat);
+        var e = this._deg_to_rad(other.lon);
 
         var co = Math.cos(he - e) * Math.cos(hn) * Math.cos(n) + Math.sin(hn) * Math.sin(n);
         var ca = Math.atan(Math.abs(Math.sqrt(1 - co * co) / co));
@@ -80,11 +79,11 @@ export default class Maidenhead {
         return r * ca;
     }
 
-    bearingTo(toHeading: Maidenhead, compassBearing = false) {
+    bearingTo(other: Maidenhead): number {
         let hn = this._deg_to_rad(this.lat);
         let he = this._deg_to_rad(this.lon);
-        let n = this._deg_to_rad(toHeading.lat);
-        let e = this._deg_to_rad(toHeading.lon);
+        let n = this._deg_to_rad(other.lat);
+        let e = this._deg_to_rad(other.lon);
 
         let co = Math.cos(he - e) * Math.cos(hn) * Math.cos(n) + Math.sin(hn) * Math.sin(n);
         let ca = Math.atan(Math.abs(Math.sqrt(1 - co * co) / co));
@@ -109,45 +108,45 @@ export default class Maidenhead {
             az = az + 2 * Math.PI;
         }
 
-        var heading: string | number = Math.round(this._rad_to_deg(az));
-
-        if (compassBearing) {
-            heading = this._compass_bearing(heading);
-        }
-
-        return heading;
+        return Math.round(this._rad_to_deg(az));
     }
 
-    get lat() {
+    compassBearingTo(other: Maidenhead): string {
+        const heading = this.bearingTo(other);
+
+        return this._compass_bearing(heading);
+    }
+
+    get lat(): number {
         return parseFloat(this._lat.toPrecision(6));
     }
 
-    set lat(pos) {
+    set lat(pos: number) {
         this._lat = this._range_check("lat", 90.0, pos)
     }
 
-    get lon() {
+    get lon(): number {
         return parseFloat(this._lon.toPrecision(6));
     }
 
-    set lon(pos) {
+    set lon(pos: number) {
         this._lon = this._range_check("lon", 180.0, pos)
     }
 
-    get precision() {
+    get precision(): number {
         return this._precision;
     }
 
-    set precision(p) {
+    set precision(p: number) {
         this._precision = p;
     }
 
-    set locator(mlocation) {
-        if (!Maidenhead.valid(mlocation)) {
+    set locator(value: string) {
+        if (!Maidenhead.valid(value)) {
             throw "Location is not a valid Maidenhead Locator System string";
         }
 
-        this._locator = mlocation;
+        this._locator = value;
         this._lat = -90.00;
         this._lon = -180.00;
 
@@ -160,7 +159,7 @@ export default class Maidenhead {
         this._convert_part_to_latlon(4, 10 * 24 * 10 * 24);
     }
 
-    get locator() {
+    get locator(): string {
         this._locator = '';
         this.__lat = this.lat + 90.0;
         this.__lon = this.lon + 180.0;
@@ -173,29 +172,29 @@ export default class Maidenhead {
         return this._locator;
     }
 
-    _compass_bearing(heading) {
+    private _compass_bearing(heading: number): string {
         if (heading >= 0 && heading <= 360) {
             var compassBearings = [
-                { "label": "N", "start": 0, "end": 11 },
-                { "label": "NNE", "start": 11, "end": 33 },
-                { "label": "NE", "start": 34, "end": 56 },
-                { "label": "ENE", "start": 57, "end": 78 },
-                { "label": "E", "start": 79, "end": 101 },
-                { "label": "ESE", "start": 102, "end": 123 },
-                { "label": "SE", "start": 124, "end": 146 },
-                { "label": "SSE", "start": 147, "end": 168 },
-                { "label": "S", "start": 169, "end": 191 },
-                { "label": "SSW", "start": 192, "end": 213 },
-                { "label": "SW", "start": 214, "end": 236 },
-                { "label": "WSW", "start": 237, "end": 258 },
-                { "label": "W", "start": 259, "end": 281 },
-                { "label": "WNW", "start": 282, "end": 303 },
-                { "label": "NW", "start": 304, "end": 326 },
-                { "label": "NNW", "start": 327, "end": 348 },
-                { "label": "N", "start": 349, "end": 360 }
+                { label: "N", start: 0, end: 11 },
+                { label: "NNE", start: 11, end: 33 },
+                { label: "NE", start: 34, end: 56 },
+                { label: "ENE", start: 57, end: 78 },
+                { label: "E", start: 79, end: 101 },
+                { label: "ESE", start: 102, end: 123 },
+                { label: "SE", start: 124, end: 146 },
+                { label: "SSE", start: 147, end: 168 },
+                { label: "S", start: 169, end: 191 },
+                { label: "SSW", start: 192, end: 213 },
+                { label: "SW", start: 214, end: 236 },
+                { label: "WSW", start: 237, end: 258 },
+                { label: "W", start: 259, end: 281 },
+                { label: "WNW", start: 282, end: 303 },
+                { label: "NW", start: 304, end: 326 },
+                { label: "NNW", start: 327, end: 348 },
+                { label: "N", start: 349, end: 360 }
             ];
 
-            var result = compassBearings.find(function (element, index, array) {
+            var result = compassBearings.find(element => {
                 if (heading > element.start && heading < element.end) {
                     return true;
                 }
@@ -204,17 +203,19 @@ export default class Maidenhead {
 
             return result ? result.label : '';
         }
+
+        return '';
     }
 
-    _deg_to_rad(deg) {
+    private _deg_to_rad(deg: number): number {
         return deg / 180 * Math.PI;
     }
 
-    _rad_to_deg(rad) {
+    private _rad_to_deg(rad: number): number {
         return rad / Math.PI * 180;
     }
 
-    _pad_locator() {
+    private _pad_locator(): void {
         var length = this._locator.length / 2;
 
         while (length < 5) {
@@ -229,7 +230,7 @@ export default class Maidenhead {
         }
     }
 
-    _range_check(target, range, pos) {
+    private _range_check(target: string, range: number, pos: number): number {
         pos = Number(pos);
         if (pos < -range || pos > range) {
             throw target + " must be between -" + range + " and +" + range;
@@ -238,7 +239,7 @@ export default class Maidenhead {
         return pos;
     }
 
-    _convert_part_to_latlon(counter, divisor) {
+    private _convert_part_to_latlon(counter: number, divisor: number): void {
         var grid_lon = this._locator.substr(counter * 2, 1);
         var grid_lat = this._locator.substr(counter * 2 + 1, 1);
 
@@ -246,14 +247,14 @@ export default class Maidenhead {
         this._lon += this._l2n(grid_lon) * 20.0 / divisor;
     }
 
-    _calculate_field() {
+    private _calculate_field(): void {
         this.__lat = (this.__lat / 10) + 0.0000001;
         this.__lon = (this.__lon / 20) + 0.0000001;
         this._locator += this._n2l(Math.floor(this.__lon)).toUpperCase() + this._n2l(Math.floor(this.__lat)).toUpperCase();
         this.__precision -= 1;
     }
 
-    _calculate_values() {
+    private _calculate_values(): void {
         for (let counter = 0; counter < this.__precision; counter++) {
             if ((counter % 2) == 0) {
                 this._compute_locator(counter, 10);
@@ -263,7 +264,7 @@ export default class Maidenhead {
         }
     }
 
-    _compute_locator(counter, divisor) {
+    private _compute_locator(counter: number, divisor: number): void {
         this.__lat = (this.__lat - Math.floor(this.__lat)) * divisor;
         this.__lon = (this.__lon - Math.floor(this.__lon)) * divisor;
 
@@ -274,15 +275,15 @@ export default class Maidenhead {
         }
     }
 
-    _l2n(letter) {
+    private _l2n(letter: string): number {
         if (letter.match(/[0-9]+/)) {
             return parseInt(letter);
         } else {
             return letter.toLowerCase().charCodeAt(0) - 97;
         }
-
     }
-    _n2l(number) {
+
+    private _n2l(number: number): string {
         return String.fromCharCode(97 + number);
     }
 }

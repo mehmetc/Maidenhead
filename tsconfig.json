@@ -5,7 +5,7 @@
         "declaration": true,
         "outDir": "./lib",
         "strict": false,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "lib": [
             "ES2015"
         ]
